@@ -1,0 +1,526 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
+
+// Initialize Supabase Client if configured
+export const supabase = isSupabaseConfigured 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+// ==========================================================================
+// Types
+// ==========================================================================
+export interface UserProfile {
+  id: string;
+  email: string;
+  nama_lengkap: string;
+  nik: string;
+  phone: string;
+}
+
+export interface PengajuanDocument {
+  id: string;
+  code: string;
+  user_id: string;
+  nik: string;
+  nama: string;
+  service_type: string;
+  service_title: string;
+  phone: string;
+  email: string;
+  alamat: string;
+  rt: string;
+  rw: string;
+  status: 'Verifikasi Berkas' | 'Sedang Diproses' | 'Siap Diambil' | 'Ditolak';
+  status_detail: string;
+  created_at: string;
+  document_url?: string;
+  verified_at?: string;
+}
+
+export interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  requirements: string[];
+}
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  category: 'Layanan' | 'Pengumuman' | 'Kegiatan';
+  content: string;
+  created_at: string;
+}
+
+export interface ContactInfo {
+  phone: string;
+  email: string;
+  alamat: string;
+  camat_nama: string;
+  camat_nip: string;
+}
+
+// ==========================================================================
+// Local Storage Mock Engine (Fallback when Admin Server is Offline)
+// ==========================================================================
+const MOCK_USERS_KEY = 'sipelak_mock_users';
+const MOCK_PROFILES_KEY = 'sipelak_mock_profiles';
+const MOCK_DOCS_KEY = 'sipelak_mock_docs';
+const CURRENT_USER_KEY = 'sipelak_current_user';
+
+const ADMIN_API_URL = 'http://localhost:3000/api/mock';
+
+// Utility to test if the Admin Server is online
+async function checkAdminServerOnline(): Promise<boolean> {
+  try {
+    const res = await fetch(`${ADMIN_API_URL}/contact`, { method: 'GET', signal: AbortSignal.timeout(1000) });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+const initMockData = () => {
+  // Initialize mock documents if not exists in local storage
+  if (typeof window !== 'undefined' && !localStorage.getItem(MOCK_DOCS_KEY)) {
+    const defaultDocs: PengajuanDocument[] = [
+      {
+        id: '1',
+        code: 'SPLK-98234',
+        user_id: 'mock-user-1',
+        nik: '3273012345670001',
+        nama: 'Budi Santoso',
+        service_type: 'ktp',
+        service_title: 'Kartu Tanda Penduduk (KTP-el)',
+        phone: '08123456789',
+        email: 'budi@gmail.com',
+        alamat: 'Jl. Merdeka No. 12',
+        rt: '003',
+        rw: '004',
+        status: 'Siap Diambil',
+        status_detail: 'KTP-el fisik Anda telah selesai dicetak. Silakan datang ke kantor kecamatan dan mengambilnya di loket pelayanan Nomor 3 dengan membawa Kartu Keluarga (KK) asli.',
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: '2',
+        code: 'SPLK-12403',
+        user_id: 'mock-user-1',
+        nik: '3273017654320002',
+        nama: 'Siti Aminah',
+        service_type: 'kk',
+        service_title: 'Kartu Keluarga (KK)',
+        phone: '08987654321',
+        email: 'siti@gmail.com',
+        alamat: 'Jl. Melati No. 45',
+        rt: '002',
+        rw: '001',
+        status: 'Sedang Diproses',
+        status_detail: 'Berkas Kartu Keluarga Anda telah diverifikasi lengkap. Saat ini sedang dalam proses penerbitan Tanda Tangan Elektronik (TTE) resmi Camat.',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: '3',
+        code: 'SPLK-87291',
+        user_id: 'mock-user-2',
+        nik: '3273011122330003',
+        nama: 'Joko Susilo',
+        service_type: 'sktm',
+        service_title: 'Surat Keterangan Tidak Mampu (SKTM)',
+        phone: '08112233445',
+        email: 'joko@gmail.com',
+        alamat: 'Jl. Anggrek No. 8',
+        rt: '001',
+        rw: '002',
+        status: 'Ditolak',
+        status_detail: 'Pengajuan ditolak karena surat pernyataan miskin tidak ditandatangani RT/RW setempat. Silakan ajukan ulang dengan berkas bertanda tangan lengkap.',
+        created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    localStorage.setItem(MOCK_DOCS_KEY, JSON.stringify(defaultDocs));
+  }
+};
+
+if (typeof window !== 'undefined') {
+  initMockData();
+}
+
+// ==========================================================================
+// Unified API Services (Switches between Real Supabase, Admin Server, & LocalStorage Mock)
+// ==========================================================================
+export const apiService = {
+  // ------------------------------------------------------------------------
+  // Auth Operations
+  // ------------------------------------------------------------------------
+  auth: {
+    async signUp(email: string, password: string, namaLengkap: string, nik: string, phone: string): Promise<{ data: any; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              nama_lengkap: namaLengkap,
+              nik: nik,
+              phone: phone
+            }
+          }
+        });
+        return { data, error };
+      } else {
+        // Try calling the Next.js Admin backend API first
+        const isOnline = await checkAdminServerOnline();
+        if (isOnline) {
+          try {
+            const res = await fetch(`${ADMIN_API_URL}/auth/signup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password, nama_lengkap: namaLengkap, nik, phone }),
+            });
+            const result = await res.json();
+            if (res.ok) {
+              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(result.user));
+              return { data: result, error: null };
+            } else {
+              return { data: null, error: { message: result.error || 'Gagal mendaftar.' } };
+            }
+          } catch (e) {
+            console.warn("Backend signup failed, falling back to localStorage", e);
+          }
+        }
+
+        // Fallback: Local Storage Mock Register
+        const users = JSON.parse(localStorage.getItem(MOCK_USERS_KEY) || '[]');
+        if (users.find((u: any) => u.email === email)) {
+          return { data: null, error: { message: 'Email sudah terdaftar.' } };
+        }
+        
+        const newUserId = `mock-user-${Math.floor(1000 + Math.random() * 9000)}`;
+        const newUser = { id: newUserId, email, password };
+        users.push(newUser);
+        localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users));
+
+        const profiles = JSON.parse(localStorage.getItem(MOCK_PROFILES_KEY) || '[]');
+        const newProfile: UserProfile = { id: newUserId, email, nama_lengkap: namaLengkap, nik, phone };
+        profiles.push(newProfile);
+        localStorage.setItem(MOCK_PROFILES_KEY, JSON.stringify(profiles));
+
+        // Auto Login
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newProfile));
+        return { data: { user: newProfile }, error: null };
+      }
+    },
+
+    async signIn(email: string, password: string): Promise<{ data: any; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (data?.user) {
+          // Get profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+            
+          return { data: { user: data.user, profile }, error };
+        }
+        return { data, error };
+      } else {
+        // Try calling the Next.js Admin backend API first
+        const isOnline = await checkAdminServerOnline();
+        if (isOnline) {
+          try {
+            const res = await fetch(`${ADMIN_API_URL}/auth/signin`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password }),
+            });
+            const result = await res.json();
+            if (res.ok) {
+              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(result.user));
+              return { data: result, error: null };
+            } else {
+              return { data: null, error: { message: result.error || 'Email atau password salah.' } };
+            }
+          } catch (e) {
+            console.warn("Backend login failed, falling back to localStorage", e);
+          }
+        }
+
+        // Fallback: Local Storage Mock Login
+        const users = JSON.parse(localStorage.getItem(MOCK_USERS_KEY) || '[]');
+        const user = users.find((u: any) => u.email === email && u.password === password);
+        
+        if (!user) {
+          return { data: null, error: { message: 'Email atau kata sandi salah.' } };
+        }
+
+        const profiles = JSON.parse(localStorage.getItem(MOCK_PROFILES_KEY) || '[]');
+        const profile = profiles.find((p: any) => p.id === user.id) || {
+          id: user.id,
+          email: user.email,
+          nama_lengkap: 'Budi Santoso', // Fallback name
+          nik: '3273012345670001',
+          phone: '08123456789'
+        };
+
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(profile));
+        return { data: { user, profile }, error: null };
+      }
+    },
+
+    async signOut(): Promise<{ error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase.auth.signOut();
+        return { error };
+      } else {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        return { error: null };
+      }
+    },
+
+    async getCurrentUser(): Promise<UserProfile | null> {
+      if (isSupabaseConfigured && supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          if (profile) {
+            return {
+              id: user.id,
+              email: user.email || '',
+              nama_lengkap: profile.nama_lengkap,
+              nik: profile.nik,
+              phone: profile.phone
+            };
+          }
+        }
+        return null;
+      } else {
+        const userStr = localStorage.getItem(CURRENT_USER_KEY);
+        return userStr ? JSON.parse(userStr) : null;
+      }
+    }
+  },
+
+  // ------------------------------------------------------------------------
+  // Pengajuan Documents Operations
+  // ------------------------------------------------------------------------
+  pengajuan: {
+    async create(docData: Omit<PengajuanDocument, 'id' | 'code' | 'user_id' | 'status' | 'status_detail' | 'created_at'>, userId: string): Promise<{ data: PengajuanDocument | null; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const code = `SPLK-${Math.floor(10000 + Math.random() * 90000)}`;
+        const status = 'Verifikasi Berkas';
+        const status_detail = 'Berkas pengajuan Anda telah diterima dan sedang diperiksa oleh petugas verifikator kecamatan.';
+        const { data, error } = await supabase
+          .from('pengajuan')
+          .insert([
+            {
+              code,
+              user_id: userId,
+              nik: docData.nik,
+              nama: docData.nama,
+              service_type: docData.service_type,
+              service_title: docData.service_title,
+              phone: docData.phone,
+              email: docData.email,
+              alamat: docData.alamat,
+              rt: docData.rt,
+              rw: docData.rw,
+              status,
+              status_detail
+            }
+          ])
+          .select()
+          .single();
+        return { data, error };
+      } else {
+        // Try calling the Next.js Admin backend API first
+        const isOnline = await checkAdminServerOnline();
+        if (isOnline) {
+          try {
+            const res = await fetch(`${ADMIN_API_URL}/pengajuan`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...docData, user_id: userId, document_name: 'berkas_persyaratan.pdf' }),
+            });
+            const result = await res.json();
+            if (res.ok) {
+              return { data: result, error: null };
+            } else {
+              return { data: null, error: { message: result.error || 'Gagal mengirim pengajuan.' } };
+            }
+          } catch (e) {
+            console.warn("Backend create submission failed, falling back to localStorage", e);
+          }
+        }
+
+        // Fallback: Local Storage Mock Insert
+        const code = `SPLK-${Math.floor(10000 + Math.random() * 90000)}`;
+        const status = 'Verifikasi Berkas';
+        const status_detail = 'Berkas pengajuan Anda telah diterima dan sedang diperiksa oleh petugas verifikator kecamatan.';
+        const created_at = new Date().toISOString();
+
+        const docs = JSON.parse(localStorage.getItem(MOCK_DOCS_KEY) || '[]');
+        const newDoc: PengajuanDocument = {
+          id: `doc-${Math.floor(1000 + Math.random() * 9000)}`,
+          code,
+          user_id: userId,
+          nik: docData.nik,
+          nama: docData.nama,
+          service_type: docData.service_type,
+          service_title: docData.service_title,
+          phone: docData.phone,
+          email: docData.email,
+          alamat: docData.alamat,
+          rt: docData.rt,
+          rw: docData.rw,
+          status,
+          status_detail,
+          created_at
+        };
+        docs.push(newDoc);
+        localStorage.setItem(MOCK_DOCS_KEY, JSON.stringify(docs));
+        return { data: newDoc, error: null };
+      }
+    },
+
+    async getByUser(userId: string): Promise<{ data: PengajuanDocument[]; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('pengajuan')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        return { data: data || [], error };
+      } else {
+        // Try calling the Next.js Admin backend API first
+        const isOnline = await checkAdminServerOnline();
+        if (isOnline) {
+          try {
+            const res = await fetch(`${ADMIN_API_URL}/pengajuan/user/${userId}`);
+            const result = await res.json();
+            if (res.ok) {
+              return { data: result, error: null };
+            }
+          } catch (e) {
+            console.warn("Backend fetch by user failed, falling back to localStorage", e);
+          }
+        }
+
+        // Fallback: Local Storage Get User Docs
+        const docs = JSON.parse(localStorage.getItem(MOCK_DOCS_KEY) || '[]');
+        const userDocs = docs.filter((d: PengajuanDocument) => d.user_id === userId);
+        userDocs.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        return { data: userDocs, error: null };
+      }
+    },
+
+    async getByCode(code: string): Promise<{ data: PengajuanDocument | null; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('pengajuan')
+          .select('*')
+          .eq('code', code.trim().toUpperCase())
+          .maybeSingle();
+        return { data, error };
+      } else {
+        // Try calling the Next.js Admin backend API first
+        const isOnline = await checkAdminServerOnline();
+        if (isOnline) {
+          try {
+            const res = await fetch(`${ADMIN_API_URL}/pengajuan/code/${code.trim()}`);
+            const result = await res.json();
+            if (res.ok) {
+              return { data: result, error: null };
+            } else {
+              return { data: null, error: { message: result.error || 'Dokumen tidak ditemukan.' } };
+            }
+          } catch (e) {
+            console.warn("Backend fetch by code failed, falling back to localStorage", e);
+          }
+        }
+
+        // Fallback: Local Storage Get By Code
+        const docs = JSON.parse(localStorage.getItem(MOCK_DOCS_KEY) || '[]');
+        const doc = docs.find((d: PengajuanDocument) => d.code.toLowerCase() === code.trim().toLowerCase());
+        return { data: doc || null, error: doc ? null : { message: 'Dokumen tidak ditemukan.' } };
+      }
+    }
+  },
+
+  // ------------------------------------------------------------------------
+  // Dynamic Content Operations (Services, FAQs, News, Contact)
+  // ------------------------------------------------------------------------
+  services: {
+    async getAll(): Promise<{ data: ServiceItem[]; error: any }> {
+      const isOnline = await checkAdminServerOnline();
+      if (isOnline) {
+        try {
+          const res = await fetch(`${ADMIN_API_URL}/services`);
+          if (res.ok) return { data: await res.json(), error: null };
+        } catch (e) {
+          console.warn("Failed fetching dynamic services from admin backend", e);
+        }
+      }
+      return { data: [], error: { message: 'Backend offline' } };
+    }
+  },
+
+  faqs: {
+    async getAll(): Promise<{ data: FaqItem[]; error: any }> {
+      const isOnline = await checkAdminServerOnline();
+      if (isOnline) {
+        try {
+          const res = await fetch(`${ADMIN_API_URL}/faqs`);
+          if (res.ok) return { data: await res.json(), error: null };
+        } catch (e) {
+          console.warn("Failed fetching dynamic faqs from admin backend", e);
+        }
+      }
+      return { data: [], error: { message: 'Backend offline' } };
+    }
+  },
+
+  news: {
+    async getAll(): Promise<{ data: NewsItem[]; error: any }> {
+      const isOnline = await checkAdminServerOnline();
+      if (isOnline) {
+        try {
+          const res = await fetch(`${ADMIN_API_URL}/news`);
+          if (res.ok) return { data: await res.json(), error: null };
+        } catch (e) {
+          console.warn("Failed fetching dynamic news from admin backend", e);
+        }
+      }
+      return { data: [], error: { message: 'Backend offline' } };
+    }
+  },
+
+  contact: {
+    async get(): Promise<{ data: ContactInfo | null; error: any }> {
+      const isOnline = await checkAdminServerOnline();
+      if (isOnline) {
+        try {
+          const res = await fetch(`${ADMIN_API_URL}/contact`);
+          if (res.ok) return { data: await res.json(), error: null };
+        } catch (e) {
+          console.warn("Failed fetching dynamic contact settings from admin backend", e);
+        }
+      }
+      return { data: null, error: { message: 'Backend offline' } };
+    }
+  }
+};
