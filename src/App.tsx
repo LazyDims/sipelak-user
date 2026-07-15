@@ -14,7 +14,7 @@ import { TrackingModal } from './components/TrackingModal';
 import type { SubmittedDoc } from './components/TrackingModal';
 import { Auth } from './components/Auth';
 import { SuratSaya } from './components/SuratSaya';
-import { apiService, isSupabaseConfigured } from './lib/supabaseService';
+import { apiService } from './lib/supabaseService';
 import type { UserProfile } from './lib/supabaseService';
 
 function App() {
@@ -152,11 +152,11 @@ function App() {
       />
       
       {/* Show configuration notice banner (optional info only) */}
-      {!isSupabaseConfigured && currentPage === 'home' && (
+      {/* {!isSupabaseConfigured && currentPage === 'home' && (
         <div style={{ backgroundColor: '#fff3cd', color: '#664d03', padding: '10px', fontSize: '0.82rem', fontWeight: 600, textAlign: 'center', borderBottom: '1px solid #ffe69c', position: 'relative', zIndex: 100, marginTop: '80px' }} className="no-print">
           ℹ️ Mode Demonstrasi Aktif (Data disimpan di database bersama admin).
         </div>
-      )}
+      )} */}
 
       {currentPage === 'home' && (
         <>

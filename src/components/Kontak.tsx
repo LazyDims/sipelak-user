@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, User } from 'lucide-react';
+import { apiService } from '../lib/supabaseService';
+import type { ContactInfo } from '../lib/supabaseService';
 
 export const Kontak: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +10,21 @@ export const Kontak: React.FC = () => {
     pesan: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [contactData, setContactData] = useState<ContactInfo | null>(null);
+
+  useEffect(() => {
+    const loadContact = async () => {
+      try {
+        const { data } = await apiService.contact.get();
+        if (data) {
+          setContactData(data);
+        }
+      } catch (e) {
+        console.warn("Using offline contact information");
+      }
+    };
+    loadContact();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +66,7 @@ export const Kontak: React.FC = () => {
                 </div>
                 <div className="info-content">
                   <h4>Alamat Kantor</h4>
-                  <p>Jl. Raya Pembangunan No. 45, Komplek Perkantoran Terpadu, Kecamatan Cerdas, Kota Metropolitan, 14045</p>
+                  <p>{contactData?.alamat || 'Jl.Slamet Riyadi No.8, Gayamsari, Kec. Gayamsari, Kota Semarang, Jawa Tengah 50248'}</p>
                 </div>
               </div>
 
@@ -59,8 +76,8 @@ export const Kontak: React.FC = () => {
                 </div>
                 <div className="info-content">
                   <h4>Telepon / WhatsApp</h4>
-                  <p>+62 821-3456-7890 (WA Pengaduan)</p>
-                  <p>(021) 8299-123 (Telepon Kantor)</p>
+                  <p>{contactData?.phone || '+62 821-3456-7890 (WA Pengaduan)'}</p>
+                  <p>{contactData?.phone ? '' : '(021) 8299-123 (Telepon Kantor)'}</p>
                 </div>
               </div>
 
@@ -70,10 +87,22 @@ export const Kontak: React.FC = () => {
                 </div>
                 <div className="info-content">
                   <h4>Email Resmi</h4>
-                  <p>kontak@kecamatancerdas.go.id</p>
-                  <p>sipelak@kecamatancerdas.go.id</p>
+                  <p>{contactData?.email || 'kontak@kecamatancerdas.go.id'}</p>
                 </div>
               </div>
+
+              {contactData?.camat_nama && (
+                <div className="info-item">
+                  <div className="info-icon-wrapper">
+                    <User size={20} className="text-primary" />
+                  </div>
+                  <div className="info-content">
+                    <h4>Camat Resmi</h4>
+                    <p>{contactData.camat_nama}</p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>NIP: {contactData.camat_nip}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="info-item">
                 <div className="info-icon-wrapper">
@@ -81,8 +110,8 @@ export const Kontak: React.FC = () => {
                 </div>
                 <div className="info-content">
                   <h4>Jam Operasional</h4>
-                  <p>Senin - Kamis: 08:00 - 15:30 WIB</p>
-                  <p>Jumat: 08:00 - 15:00 WIB (Istirahat 11:30 - 13:00 WIB)</p>
+                  <p>Senin - Kamis: 08:00 - 16:00 WIB</p>
+                  <p>Jumat: 08:00 - 14:00 WIB (Istirahat 11:30 - 13:00 WIB)</p>
                   <p>Sabtu, Minggu & Hari Libur Nasional: Tutup</p>
                 </div>
               </div>
@@ -154,7 +183,7 @@ export const Kontak: React.FC = () => {
               </form>
             </div>
 
-            {/* Stylized Google Map Placeholder */}
+            {/* Stylized Google Map Placeholder
             <div className="map-card">
               <div className="map-placeholder">
                 <div className="map-pulse-point"></div>
@@ -162,12 +191,12 @@ export const Kontak: React.FC = () => {
                   <MapPin size={24} className="text-primary" />
                 </div>
                 <div className="map-popup">
-                  <strong>Kantor Kecamatan Cerdas</strong>
+                  <strong>Kantor Kecamatan Gayamsari</strong>
                   <span>Klik untuk rute Google Maps</span>
                 </div>
                 <div className="map-grid-layer"></div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

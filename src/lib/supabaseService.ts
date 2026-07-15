@@ -39,6 +39,7 @@ export interface PengajuanDocument {
   created_at: string;
   document_url?: string;
   verified_at?: string;
+  document_name?: string;
 }
 
 export interface ServiceItem {
@@ -70,6 +71,23 @@ export interface ContactInfo {
   camat_nip: string;
 }
 
+export interface StatistikItem {
+  id: number;
+  value: string;
+  label: string;
+  description: string;
+  color_class: string;
+  icon_name?: string;
+}
+
+export interface AlurItem {
+  id: number;
+  step_number: string;
+  title: string;
+  description: string;
+  icon_name: string;
+}
+
 // ==========================================================================
 // Local Storage Mock Engine (Fallback when Admin Server is Offline)
 // ==========================================================================
@@ -77,6 +95,8 @@ const MOCK_USERS_KEY = 'sipelak_mock_users';
 const MOCK_PROFILES_KEY = 'sipelak_mock_profiles';
 const MOCK_DOCS_KEY = 'sipelak_mock_docs';
 const CURRENT_USER_KEY = 'sipelak_current_user';
+const MOCK_STATS_KEY = 'sipelak_mock_stats';
+const MOCK_ALUR_KEY = 'sipelak_mock_alur';
 
 const ADMIN_API_URL = 'http://localhost:3000/api/mock';
 
@@ -147,6 +167,28 @@ const initMockData = () => {
       }
     ];
     localStorage.setItem(MOCK_DOCS_KEY, JSON.stringify(defaultDocs));
+  }
+
+  // Initialize mock statistics if not exists in local storage
+  if (typeof window !== 'undefined' && !localStorage.getItem(MOCK_STATS_KEY)) {
+    const defaultStats = [
+      { id: 1, value: '14,825', label: 'Total Pengajuan', description: 'Dokumen masuk terhitung sejak awal tahun', color_class: 'blue' },
+      { id: 2, value: '14,562', label: 'Selesai Diproses', description: 'Dokumen berhasil diterbitkan & diserahkan', color_class: 'green' },
+      { id: 3, value: '24 Jam', label: 'Rata-rata Waktu Proses', description: 'Lebih cepat dibanding pengurusan konvensional', color_class: 'yellow' },
+      { id: 4, value: '98.6%', label: 'Kepuasan Warga (IKM)', description: 'Berdasarkan survei kepuasan pelayanan online', color_class: 'teal' }
+    ];
+    localStorage.setItem(MOCK_STATS_KEY, JSON.stringify(defaultStats));
+  }
+
+  // Initialize mock alur if not exists in local storage
+  if (typeof window !== 'undefined' && !localStorage.getItem(MOCK_ALUR_KEY)) {
+    const defaultAlur = [
+      { id: 1, step_number: '01', title: 'Pilih Layanan', description: 'Tentukan jenis administrasi yang Anda butuhkan, baca persyaratannya, lalu klik tombol Ajukan Sekarang.', icon_name: 'Search' },
+      { id: 2, step_number: '02', title: 'Isi Data & Unggah', description: 'Lengkapi formulir online dengan data diri Anda yang valid, dan unggah foto/scan dokumen persyaratan yang diminta.', icon_name: 'Edit3' },
+      { id: 3, step_number: '03', title: 'Verifikasi Petugas', description: 'Petugas kecamatan akan memverifikasi berkas Anda secara online. Jika ada kekurangan, Anda akan langsung dihubungi.', icon_name: 'ShieldAlert' },
+      { id: 4, step_number: '04', title: 'Selesai & Ambil', description: 'Setelah dokumen selesai diproses, Anda akan menerima notifikasi untuk mengunduh dokumen atau mengambilnya di kantor.', icon_name: 'CheckCircle2' }
+    ];
+    localStorage.setItem(MOCK_ALUR_KEY, JSON.stringify(defaultAlur));
   }
 };
 
@@ -340,7 +382,9 @@ export const apiService = {
               rt: docData.rt,
               rw: docData.rw,
               status,
-              status_detail
+              status_detail,
+              document_name: docData.document_name,
+              document_url: docData.document_url
             }
           ])
           .select()
@@ -354,7 +398,7 @@ export const apiService = {
             const res = await fetch(`${ADMIN_API_URL}/pengajuan`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...docData, user_id: userId, document_name: 'berkas_persyaratan.pdf' }),
+              body: JSON.stringify({ ...docData, user_id: userId }),
             });
             const result = await res.json();
             if (res.ok) {
@@ -389,7 +433,9 @@ export const apiService = {
           rw: docData.rw,
           status,
           status_detail,
-          created_at
+          created_at,
+          document_name: docData.document_name,
+          document_url: docData.document_url
         };
         docs.push(newDoc);
         localStorage.setItem(MOCK_DOCS_KEY, JSON.stringify(docs));
@@ -462,10 +508,17 @@ export const apiService = {
   },
 
   // ------------------------------------------------------------------------
-  // Dynamic Content Operations (Services, FAQs, News, Contact)
+  // Dynamic Content Operations (Services, FAQs, News, Contact, Statistik, Alur)
   // ------------------------------------------------------------------------
   services: {
     async getAll(): Promise<{ data: ServiceItem[]; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('services')
+          .select('*')
+          .order('id', { ascending: true });
+        if (!error && data) return { data, error: null };
+      }
       const isOnline = await checkAdminServerOnline();
       if (isOnline) {
         try {
@@ -481,6 +534,13 @@ export const apiService = {
 
   faqs: {
     async getAll(): Promise<{ data: FaqItem[]; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('faqs')
+          .select('*')
+          .order('id', { ascending: true });
+        if (!error && data) return { data, error: null };
+      }
       const isOnline = await checkAdminServerOnline();
       if (isOnline) {
         try {
@@ -496,6 +556,13 @@ export const apiService = {
 
   news: {
     async getAll(): Promise<{ data: NewsItem[]; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('news')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!error && data) return { data, error: null };
+      }
       const isOnline = await checkAdminServerOnline();
       if (isOnline) {
         try {
@@ -511,6 +578,14 @@ export const apiService = {
 
   contact: {
     async get(): Promise<{ data: ContactInfo | null; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('contact')
+          .select('*')
+          .eq('id', 1)
+          .maybeSingle();
+        if (!error && data) return { data, error: null };
+      }
       const isOnline = await checkAdminServerOnline();
       if (isOnline) {
         try {
@@ -521,6 +596,60 @@ export const apiService = {
         }
       }
       return { data: null, error: { message: 'Backend offline' } };
+    }
+  },
+
+  statistik: {
+    async getAll(): Promise<{ data: StatistikItem[]; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('statistik')
+          .select('*')
+          .order('id', { ascending: true });
+        if (!error && data) return { data, error: null };
+      }
+      const isOnline = await checkAdminServerOnline();
+      if (isOnline) {
+        try {
+          const res = await fetch(`${ADMIN_API_URL}/statistik`);
+          if (res.ok) return { data: await res.json(), error: null };
+        } catch (e) {
+          console.warn("Failed fetching dynamic statistik from admin backend", e);
+        }
+      }
+      // Fallback: Local Storage Get Stats
+      if (typeof window !== 'undefined') {
+        const stats = localStorage.getItem(MOCK_STATS_KEY);
+        if (stats) return { data: JSON.parse(stats), error: null };
+      }
+      return { data: [], error: { message: 'Backend offline' } };
+    }
+  },
+
+  alur: {
+    async getAll(): Promise<{ data: AlurItem[]; error: any }> {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('alur')
+          .select('*')
+          .order('id', { ascending: true });
+        if (!error && data) return { data, error: null };
+      }
+      const isOnline = await checkAdminServerOnline();
+      if (isOnline) {
+        try {
+          const res = await fetch(`${ADMIN_API_URL}/alur`);
+          if (res.ok) return { data: await res.json(), error: null };
+        } catch (e) {
+          console.warn("Failed fetching dynamic alur from admin backend", e);
+        }
+      }
+      // Fallback: Local Storage Get Alur
+      if (typeof window !== 'undefined') {
+        const alur = localStorage.getItem(MOCK_ALUR_KEY);
+        if (alur) return { data: JSON.parse(alur), error: null };
+      }
+      return { data: [], error: { message: 'Backend offline' } };
     }
   }
 };

@@ -189,8 +189,8 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
               <div className="paper-document-sheet">
                 <div className="doc-letterhead">
                   <div className="letterhead-header">
-                    <h4>PEMERINTAH KABUPATEN METROPOLITAN</h4>
-                    <h3>KANTOR KECAMATAN CERDAS</h3>
+                    <h4>PEMERINTAH KOTA SEMARANG</h4>
+                    <h3>KANTOR KECAMATAN GAYAMSARI</h3>
                     <p>Jl. Raya Pembangunan No. 45, Komplek Perkantoran Terpadu, Kode Pos 14045</p>
                   </div>
                   <div className="letterhead-divider"></div>
@@ -202,7 +202,7 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
                 </div>
 
                 <div className="doc-body-area">
-                  <p>Yang bertanda tangan di bawah ini, Camat Kecamatan Cerdas, Kabupaten Metropolitan, menerangkan dengan sebenarnya bahwa:</p>
+                  <p>Yang bertanda tangan di bawah ini, Camat KECAMATAN GAYAMSARI, KOTA SEMARANG, menerangkan dengan sebenarnya bahwa:</p>
                   
                   <table className="doc-data-table">
                     <tbody>
@@ -219,7 +219,7 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
                       <tr>
                         <td><strong>Alamat</strong></td>
                         <td>:</td>
-                        <td>{previewDoc.alamat}, RT {previewDoc.rt} / RW {previewDoc.rw}, Kecamatan Cerdas</td>
+                        <td>{previewDoc.alamat}, RT {previewDoc.rt} / RW {previewDoc.rw}, KECAMATAN GAYAMSARI</td>
                       </tr>
                       <tr>
                         <td><strong>No. WhatsApp</strong></td>
@@ -230,7 +230,7 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
                   </table>
 
                   <p className="doc-justification">
-                    Berdasarkan data kependudukan dan hasil verifikasi berkas online pada sistem SIPELAK, nama yang tercantum di atas adalah benar warga domisili Kecamatan Cerdas dan dokumen administrasi **{previewDoc.service_title}** miliknya telah resmi diterbitkan, disetujui, serta sah menurut hukum yang berlaku.
+                    Berdasarkan data kependudukan dan hasil verifikasi berkas online pada sistem SIPELAK, nama yang tercantum di atas adalah benar warga domisili KECAMATAN GAYAMSARI dan dokumen administrasi **{previewDoc.service_title}** miliknya telah resmi diterbitkan, disetujui, serta sah menurut hukum yang berlaku.
                   </p>
                   
                   <p className="doc-closing">Demikian surat keterangan ini diberikan untuk dapat dipergunakan sebagaimana mestinya.</p>
@@ -238,22 +238,22 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
 
                 <div className="doc-footer-area">
                   <div className="doc-qr-verification">
-                    {/* Simulated Verification QR Code */}
+                    {/* Simulated Verification QR Code
                     <div className="qr-code-placeholder">
                       <div className="qr-blocks"></div>
                       <div className="qr-center-text">SIPELAK VERIFIED</div>
                     </div>
-                    <span className="qr-caption">Scan QR untuk verifikasi keaslian dokumen</span>
+                    <span className="qr-caption">Scan QR untuk verifikasi keaslian dokumen</span> */}
                   </div>
                   
                   <div className="doc-signature-block">
-                    <p>Cerdas, {formatDate(new Date().toISOString())}</p>
-                    <p className="signer-role"><strong>CAMAT KECAMATAN CERDAS</strong></p>
+                    <p>Semarang, {formatDate(new Date().toISOString())}</p>
+                    <p className="signer-role"><strong>CAMAT KECAMATAN GAYAMSARI</strong></p>
                     
                     {/* Simulated Digital Signature Stamp */}
                     <div className="digital-stamp">
                       <div className="stamp-ring">
-                        <span>TTE KECAMATAN CERDAS</span>
+                        <span>TTE KECAMATAN GAYAMSARI</span>
                       </div>
                       <span className="stamp-date">DIVERIFIKASI SECARA ELEKTRONIK</span>
                     </div>
@@ -282,8 +282,8 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
         <div className="only-print paper-document-sheet">
           <div className="doc-letterhead">
             <div className="letterhead-header">
-              <h4>PEMERINTAH KABUPATEN METROPOLITAN</h4>
-              <h3>KANTOR KECAMATAN CERDAS</h3>
+              <h4>PEMERINTAH KOTA SEMARANG</h4>
+              <h3>KANTOR KECAMATAN GAYAMSARI</h3>
               <p>Jl. Raya Pembangunan No. 45, Komplek Perkantoran Terpadu, Kode Pos 14045</p>
             </div>
             <div className="letterhead-divider"></div>
@@ -295,7 +295,7 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
           </div>
 
           <div className="doc-body-area">
-            <p>Yang bertanda tangan di bawah ini, Camat Kecamatan Cerdas, Kabupaten Metropolitan, menerangkan dengan sebenarnya bahwa:</p>
+            <p>Yang bertanda tangan di bawah ini, Camat KECAMATAN GAYAMSARI, KOTA, menerangkan dengan sebenarnya bahwa:</p>
             
             <table className="doc-data-table">
               <tbody>
@@ -312,7 +312,7 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
                 <tr>
                   <td><strong>Alamat</strong></td>
                   <td>:</td>
-                  <td>{previewDoc.alamat}, RT {previewDoc.rt} / RW {previewDoc.rw}, Kecamatan Cerdas</td>
+                  <td>{previewDoc.alamat}, RT {previewDoc.rt} / RW {previewDoc.rw}, KECAMATAN GAYAMSARI</td>
                 </tr>
                 <tr>
                   <td><strong>No. WhatsApp</strong></td>
@@ -323,7 +323,7 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
             </table>
 
             <p className="doc-justification">
-              Berdasarkan data kependudukan dan hasil verifikasi berkas online pada sistem SIPELAK, nama yang tercantum di atas adalah benar warga domisili Kecamatan Cerdas dan dokumen administrasi <strong>{previewDoc.service_title}</strong> miliknya telah resmi diterbitkan, disetujui, serta sah menurut hukum yang berlaku.
+              Berdasarkan data kependudukan dan hasil verifikasi berkas online pada sistem SIPELAK, nama yang tercantum di atas adalah benar warga domisili KECAMATAN GAYAMSARI dan dokumen administrasi <strong>{previewDoc.service_title}</strong> miliknya telah resmi diterbitkan, disetujui, serta sah menurut hukum yang berlaku.
             </p>
             
             <p className="doc-closing">Demikian surat keterangan ini diberikan untuk dapat dipergunakan sebagaimana mestinya.</p>
@@ -331,20 +331,16 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
 
           <div className="doc-footer-area">
             <div className="doc-qr-verification">
-              <div className="qr-code-placeholder">
-                <div className="qr-blocks"></div>
-                <div className="qr-center-text">SIPELAK VERIFIED</div>
-              </div>
-              <span className="qr-caption">Scan QR untuk verifikasi keaslian dokumen</span>
+              
             </div>
             
             <div className="doc-signature-block">
-              <p>Cerdas, {formatDate(new Date().toISOString())}</p>
-              <p className="signer-role"><strong>CAMAT KECAMATAN CERDAS</strong></p>
+              <p>Gayamsari, {formatDate(new Date().toISOString())}</p>
+              <p className="signer-role"><strong>CAMAT KECAMATAN GAYAMSARI</strong></p>
               
               <div className="digital-stamp">
                 <div className="stamp-ring">
-                  <span>TTE KECAMATAN CERDAS</span>
+                  <span>TTE KECAMATAN GAYAMSARI</span>
                 </div>
                 <span className="stamp-date">DIVERIFIKASI SECARA ELEKTRONIK</span>
               </div>

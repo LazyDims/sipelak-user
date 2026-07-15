@@ -1,41 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layers, CheckCircle2, Clock, ThumbsUp } from 'lucide-react';
+import { apiService } from '../lib/supabaseService';
+import type { StatistikItem } from '../lib/supabaseService';
 
 export const Statistik: React.FC = () => {
-  const stats = [
-    {
-      id: 1,
-      value: '14,825',
-      label: 'Total Pengajuan',
-      desc: 'Dokumen masuk terhitung sejak awal tahun',
-      icon: <Layers size={32} className="stat-card-icon text-primary" />,
-      colorClass: 'blue'
-    },
-    {
-      id: 2,
-      value: '14,562',
-      label: 'Selesai Diproses',
-      desc: 'Dokumen berhasil diterbitkan & diserahkan',
-      icon: <CheckCircle2 size={32} className="stat-card-icon text-success" />,
-      colorClass: 'green'
-    },
-    {
-      id: 3,
-      value: '24 Jam',
-      label: 'Rata-rata Waktu Proses',
-      desc: 'Lebih cepat dibanding pengurusan konvensional',
-      icon: <Clock size={32} className="stat-card-icon text-warning" />,
-      colorClass: 'yellow'
-    },
-    {
-      id: 4,
-      value: '98.6%',
-      label: 'Kepuasan Warga (IKM)',
-      desc: 'Berdasarkan survei kepuasan pelayanan online',
-      icon: <ThumbsUp size={32} className="stat-card-icon text-info" />,
-      colorClass: 'teal'
+  const [stats, setStats] = useState<StatistikItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const getIconForStat = (iconName: string, colorClass: string) => {
+    const iconColorMap: Record<string, string> = {
+      blue: 'text-primary',
+      green: 'text-success',
+      yellow: 'text-warning',
+      teal: 'text-info'
+    };
+    const colorClassVal = iconColorMap[colorClass] || 'text-primary';
+
+    switch (iconName) {
+      case 'Layers': return <Layers size={32} className={`stat-card-icon ${colorClassVal}`} />;
+      case 'CheckCircle2': return <CheckCircle2 size={32} className={`stat-card-icon ${colorClassVal}`} />;
+      case 'Clock': return <Clock size={32} className={`stat-card-icon ${colorClassVal}`} />;
+      case 'ThumbsUp': return <ThumbsUp size={32} className={`stat-card-icon ${colorClassVal}`} />;
+      default: return <Layers size={32} className={`stat-card-icon ${colorClassVal}`} />;
     }
-  ];
+  };
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const { data } = await apiService.statistik.getAll();
+        if (data && data.length > 0) {
+          setStats(data);
+        }
+      } catch (e) {
+        console.warn("Using offline statistics");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px 0', color: 'var(--text-muted)' }}>
+        Memuat data statistik...
+      </div>
+    );
+  }
 
   return (
     <section id="statistik" className="statistik-section section-bg-light">
@@ -53,13 +65,13 @@ export const Statistik: React.FC = () => {
 
         <div className="stats-grid">
           {stats.map((stat) => (
-            <div key={stat.id} className={`stat-card stat-card-${stat.colorClass}`}>
+            <div key={stat.id} className={`stat-card stat-card-${stat.color_class}`}>
               <div className="stat-icon-container">
-                {stat.icon}
+                {getIconForStat(stat.icon_name || stat.label, stat.color_class)}
               </div>
               <div className="stat-number">{stat.value}</div>
               <h3 className="stat-label">{stat.label}</h3>
-              <p className="stat-desc">{stat.desc}</p>
+              <p className="stat-desc">{stat.description}</p>
             </div>
           ))}
         </div>

@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div className="logo-text">
             <span className="logo-title">SIPELAK</span>
-            <span className="logo-subtitle">Kecamatan Cerdas</span>
+            <span className="logo-subtitle">Kecamatan Gayamsari</span>
           </div>
         </a>
 

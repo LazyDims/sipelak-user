@@ -187,6 +187,27 @@ export const FormPengajuan: React.FC<FormPengajuanProps> = ({
     }
 
     try {
+      // Read all files as base64 strings so they can be persisted and viewed in the admin dashboard
+      const filePromises = Object.entries(files)
+        .filter(([_, file]) => file !== null)
+        .map(([req, file]) => {
+          return new Promise<{ requirement: string; file_name: string; file_url: string }>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve({
+                requirement: req,
+                file_name: file!.name,
+                file_url: reader.result as string
+              });
+            };
+            reader.readAsDataURL(file!);
+          });
+        });
+
+      const uploadedFiles = await Promise.all(filePromises);
+      const documentNameJson = JSON.stringify(uploadedFiles);
+      const documentUrlVal = uploadedFiles[0]?.file_url || '';
+
       const { data, error: apiErr } = await apiService.pengajuan.create({
         nik,
         nama,
@@ -196,7 +217,9 @@ export const FormPengajuan: React.FC<FormPengajuanProps> = ({
         rt,
         rw,
         service_type: selectedService.id,
-        service_title: selectedService.title
+        service_title: selectedService.title,
+        document_name: documentNameJson,
+        document_url: documentUrlVal
       }, user.id);
 
       if (apiErr) {
