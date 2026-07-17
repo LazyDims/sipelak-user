@@ -1,6 +1,5 @@
 import React from 'react';
 import { ArrowUp } from 'lucide-react';
-import logoSmg from '../assets/logo_smg.png';
 
 interface FooterProps {
   setCurrentPage: (page: 'home' | 'form') => void;
@@ -29,7 +28,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
         {/* Col 1: About */}
         <div className="footer-col-about">
           <div className="footer-logo">
-            <img src={logoSmg} alt="Logo Semarang" className="logo-img" />
+            <img src="/logo_smg.png" alt="Logo Semarang" className="logo-img" />
             <span className="logo-title">SIPELAK</span>
           </div>
           <p className="footer-desc">
