@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Landmark, ArrowRight, User, LogOut, FileText } from 'lucide-react';
+import { Menu, X, ArrowRight, User, LogOut, FileText } from 'lucide-react';
 import type { UserProfile } from '../lib/supabaseService';
+import logoSmg from '../assets/logo_smg.png';
 
 interface NavbarProps {
   currentPage: 'home' | 'form' | 'surat' | 'auth';
@@ -109,9 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''} no-print`}>
       <div className="navbar-container container">
         <a href="#home" className="navbar-logo" onClick={handleLogoClick}>
-          <div className="logo-icon">
-            <Landmark size={24} className="text-primary" />
-          </div>
+          <img src={logoSmg} alt="Logo Semarang" className="logo-img" />
           <div className="logo-text">
             <span className="logo-title">SIPELAK</span>
             <span className="logo-subtitle">Kecamatan Gayamsari</span>
@@ -231,9 +230,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className={`navbar-sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header container">
           <a href="#home" className="navbar-logo" onClick={handleLogoClick}>
-            <div className="logo-icon">
-              <Landmark size={24} className="text-primary" />
-            </div>
+            <img src={logoSmg} alt="Logo Semarang" className="logo-img" />
             <div className="logo-text">
               <span className="logo-title">SIPELAK</span>
             </div>

@@ -48,6 +48,12 @@
   transition: var(--transition);
 }
 
+.logo-img {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+}
+
 .logo-icon.white {
   background-color: var(--bg-white);
 }
