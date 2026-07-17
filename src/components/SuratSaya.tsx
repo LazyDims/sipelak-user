@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Calendar, Download, ArrowLeft, RefreshCw, Eye, AlertCircle } from 'lucide-react';
 import { apiService } from '../lib/supabaseService';
-import type { PengajuanDocument, UserProfile } from '../lib/supabaseService';
+import type { PengajuanDocument, UserProfile, ContactInfo } from '../lib/supabaseService';
 
 interface SuratSayaProps {
   user: UserProfile;
@@ -15,6 +15,7 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
   
   // Printable Document Preview Modal State
   const [previewDoc, setPreviewDoc] = useState<PengajuanDocument | null>(null);
+  const [contactData, setContactData] = useState<ContactInfo | null>(null);
 
   const fetchDocs = async () => {
     setLoading(true);
@@ -36,6 +37,20 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
   useEffect(() => {
     fetchDocs();
   }, [user.id]);
+
+  useEffect(() => {
+    const loadContact = async () => {
+      try {
+        const { data } = await apiService.contact.get();
+        if (data) {
+          setContactData(data);
+        }
+      } catch (e) {
+        console.warn("Failed to load contact info in SuratSaya:", e);
+      }
+    };
+    loadContact();
+  }, []);
 
   const handlePrint = (doc: PengajuanDocument) => {
     setPreviewDoc(doc);
@@ -258,8 +273,8 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
                       <span className="stamp-date">DIVERIFIKASI SECARA ELEKTRONIK</span>
                     </div>
 
-                    <p className="signer-name"><strong>Drs. H. ADITYA NUGRAHA, M.Si.</strong></p>
-                    <p className="signer-nip">NIP. 19780512 200501 1 002</p>
+                    <p className="signer-name"><strong>{contactData?.camat_nama || 'Drs. H. ADITYA NUGRAHA, M.Si.'}</strong></p>
+                    <p className="signer-nip">NIP. {contactData?.camat_nip || '19780512 200501 1 002'}</p>
                   </div>
                 </div>
               </div>
@@ -345,8 +360,8 @@ export const SuratSaya: React.FC<SuratSayaProps> = ({ user, setCurrentPage }) =>
                 <span className="stamp-date">DIVERIFIKASI SECARA ELEKTRONIK</span>
               </div>
 
-              <p className="signer-name"><strong>Drs. H. ADITYA NUGRAHA, M.Si.</strong></p>
-              <p className="signer-nip">NIP. 19780512 200501 1 002</p>
+              <p className="signer-name"><strong>{contactData?.camat_nama || 'Drs. H. ADITYA NUGRAHA, M.Si.'}</strong></p>
+              <p className="signer-nip">NIP. {contactData?.camat_nip || '19780512 200501 1 002'}</p>
             </div>
           </div>
         </div>

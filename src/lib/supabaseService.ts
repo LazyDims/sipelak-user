@@ -97,6 +97,7 @@ const MOCK_DOCS_KEY = 'sipelak_mock_docs';
 const CURRENT_USER_KEY = 'sipelak_current_user';
 const MOCK_STATS_KEY = 'sipelak_mock_stats';
 const MOCK_ALUR_KEY = 'sipelak_mock_alur';
+const MOCK_CONTACT_KEY = 'sipelak_mock_contact';
 
 const ADMIN_API_URL = 'http://localhost:3000/api/mock';
 
@@ -189,6 +190,18 @@ const initMockData = () => {
       { id: 4, step_number: '04', title: 'Selesai & Ambil', description: 'Setelah dokumen selesai diproses, Anda akan menerima notifikasi untuk mengunduh dokumen atau mengambilnya di kantor.', icon_name: 'CheckCircle2' }
     ];
     localStorage.setItem(MOCK_ALUR_KEY, JSON.stringify(defaultAlur));
+  }
+
+  // Initialize mock contact if not exists in local storage
+  if (typeof window !== 'undefined' && !localStorage.getItem(MOCK_CONTACT_KEY)) {
+    const defaultContact: ContactInfo = {
+      phone: '08123456789',
+      email: 'kecamatan.cerdas@sipelak.go.id',
+      alamat: 'Jl.Slamet Riyadi No.8, Gayamsari, Kec. Gayamsari, Kota Semarang, Jawa Tengah',
+      camat_nama: 'Drs. H. ADITYA NUGRAHA, M.Si.',
+      camat_nip: '19780512 200501 1 002'
+    };
+    localStorage.setItem(MOCK_CONTACT_KEY, JSON.stringify(defaultContact));
   }
 };
 
@@ -594,6 +607,11 @@ export const apiService = {
         } catch (e) {
           console.warn("Failed fetching dynamic contact settings from admin backend", e);
         }
+      }
+      // Fallback: Local Storage Get Contact
+      if (typeof window !== 'undefined') {
+        const contact = localStorage.getItem(MOCK_CONTACT_KEY);
+        if (contact) return { data: JSON.parse(contact), error: null };
       }
       return { data: null, error: { message: 'Backend offline' } };
     }
