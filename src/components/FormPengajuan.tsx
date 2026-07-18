@@ -480,7 +480,7 @@ export const FormPengajuan: React.FC<FormPengajuanProps> = ({
                 </div>
 
                 <div className="form-group col-span-2">
-                  <label htmlFor="alamat" className="form-label">Alamat Lengkap Rumah (Kecamatan Cerdas) <span>*</span></label>
+                  <label htmlFor="alamat" className="form-label">Alamat Lengkap Rumah (Kecamatan Gayamsari) <span>*</span></label>
                   <input
                     type="text"
                     id="alamat"
