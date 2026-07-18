@@ -86,7 +86,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentPage }) => {
       <div className="footer-bottom">
         <div className="container footer-bottom-flex">
           <p className="copyright-text">
-            &copy; {new Date().getFullYear()} SIPELAK Kecamatan Cerdas. All rights reserved. 
+            &copy; {new Date().getFullYear()} SIPELAK Kecamatan Gayamsari. All rights reserved. 
           </p>
           <button className="btn-back-to-top" onClick={handleScrollToTop} aria-label="Scroll ke atas">
             <span>Kembali ke Atas</span>
